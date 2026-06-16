@@ -39,6 +39,30 @@ docker compose up -d
 
 ## Token Flow Explanation
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend as Next.js (NextAuth)
+    participant Keycloak as Keycloak (IdP)
+    participant Backend as Spring Boot (Resource Server)
+
+    User->>Frontend: Click Login
+    Frontend->>Keycloak: Redirect to /auth (Auth Request)
+    Keycloak-->>User: Show Login Form
+    User->>Keycloak: Submit Credentials
+    Keycloak-->>Frontend: Redirect with Authorization Code
+    Frontend->>Keycloak: Token Exchange (Code + Client Secret)
+    Keycloak-->>Frontend: Issue id_token, access_token, refresh_token
+    
+    User->>Frontend: Click Call API
+    Frontend->>Backend: API Request (Authorization: Bearer <access_token>)
+    Backend->>Keycloak: Fetch Public Keys (JWKS)
+    Keycloak-->>Backend: Return Public Keys
+    Backend->>Backend: Validate JWT (Signature, Issuer, Exp)
+    Backend-->>Frontend: API Response
+    Frontend-->>User: Display Data
+```
+
 1.  **Authorization Request**: Frontend redirects user to Keycloak (`/auth`).
 2.  **Authentication**: User enters credentials in Keycloak.
 3.  **Authorization Code**: Keycloak redirects back to Frontend with a short-lived `code`.
