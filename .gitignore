@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+
+# Java / Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.log
+*.tmp
+*.bak
+
+# Keycloak
+keycloak/data/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Workspaces & Personal Config
+.worktrees/
+.gemini/
+
+# OS
+.DS_Store
+Thumbs.db

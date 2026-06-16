@@ -1,0 +1,44 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_URL: http://localhost:8081
+    ports:
+      - "8081:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
+
+  backend:
+    image: eclipse-temurin:17-jdk-jammy
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8081/realms/demo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/demo/protocol/openid-connect/certs
+    command: sh ./entrypoint.sh
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak
+
+  frontend:
+    image: node:20
+    volumes:
+      - ./frontend:/app
+    working_dir: /app
+    environment:
+      KEYCLOAK_ISSUER: http://localhost:8081/realms/demo
+    command: sh ./entrypoint.sh
+    ports:
+      - "3000:3000"
+    depends_on:
+      - keycloak
+
+volumes: 
+  keycloak-data:
