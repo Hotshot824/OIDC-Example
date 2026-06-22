@@ -4,6 +4,35 @@ import KeycloakProvider from "next-auth/providers/keycloak";
 const internalUrl = "http://keycloak:8080/realms/demo";
 const externalUrl = "http://localhost:8081/realms/demo";
 
+async function refreshAccessToken(token: any) {
+  try {
+    const url = `${internalUrl}/protocol/openid-connect/token`;
+    const response = await fetch(url, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.KEYCLOAK_CLIENT_ID!,
+        client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken,
+      }),
+      method: "POST",
+    });
+
+    const refreshedTokens = await response.json();
+
+    if (!response.ok) throw refreshedTokens;
+
+    return {
+      ...token,
+      accessToken: refreshedTokens.access_token,
+      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+    };
+  } catch (error) {
+    return { ...token, error: "RefreshAccessTokenError" };
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     KeycloakProvider({
@@ -13,7 +42,7 @@ export const authOptions: NextAuthOptions = {
       wellKnown: `${internalUrl}/.well-known/openid-configuration`,
       authorization: {
         url: `${externalUrl}/protocol/openid-connect/auth`,
-        params: { scope: "openid profile email" }
+        params: { scope: "openid profile email offline_access" }
       },
       token: `${internalUrl}/protocol/openid-connect/token`,
       userinfo: `${internalUrl}/protocol/openid-connect/userinfo`,
@@ -21,14 +50,23 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token;
+    async jwt({ token, user, account }) {
+      if (account && user) {
+        return {
+          accessToken: account.access_token,
+          accessTokenExpires: Date.now() + (account.expires_in! * 1000),
+          refreshToken: account.refresh_token,
+          user,
+        };
       }
-      return token;
+      if (Date.now() < (token.accessTokenExpires as number)) {
+        return token;
+      }
+      return refreshAccessToken(token);
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
+      session.error = token.error as string | undefined;
       return session;
     },
   },
