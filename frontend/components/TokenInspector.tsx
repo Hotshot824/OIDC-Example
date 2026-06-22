@@ -5,13 +5,25 @@ interface TokenInspectorProps {
 export default function TokenInspector({ token }: TokenInspectorProps) {
   if (!token) return null;
 
+  const decodeJWT = (t: string) => {
+    try {
+      const base64Url = t.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(window.atob(base64));
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const decoded = decodeJWT(token);
+
   return (
     <div className="bg-white shadow rounded-lg border border-gray-100 overflow-hidden">
       <div className="px-4 py-5 sm:px-6 border-b border-gray-100">
         <h3 className="text-lg leading-6 font-medium text-gray-900">Access Token</h3>
         <p className="mt-1 max-w-2xl text-sm text-gray-500">This JWT is used to authenticate requests to the backend.</p>
       </div>
-      <div className="p-4">
+      <div className="p-4 space-y-4">
         <div className="relative">
           <div className="bg-gray-50 rounded border border-gray-200 p-3 overflow-hidden">
             <p className="text-[10px] font-mono break-all text-gray-600 leading-relaxed">
@@ -22,6 +34,15 @@ export default function TokenInspector({ token }: TokenInspectorProps) {
              <span className="text-[10px] font-bold text-gray-300 uppercase">JWT</span>
           </div>
         </div>
+
+        {decoded && (
+          <div className="bg-gray-900 rounded p-4 overflow-auto">
+            <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase">Decoded Payload</h4>
+            <pre className="text-[11px] font-mono text-indigo-300">
+              {JSON.stringify(decoded, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   );

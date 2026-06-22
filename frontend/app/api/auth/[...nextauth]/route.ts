@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
       wellKnown: `${internalUrl}/.well-known/openid-configuration`,
       authorization: {
         url: `${externalUrl}/protocol/openid-connect/auth`,
-        params: { scope: "openid profile email offline_access" }
+        params: { scope: "openid profile email" }
       },
       token: `${internalUrl}/protocol/openid-connect/token`,
       userinfo: `${internalUrl}/protocol/openid-connect/userinfo`,
@@ -53,7 +53,6 @@ export const authOptions: NextAuthOptions = {
     async signOut({ token }) {
       if (token.accessToken) {
         const logoutUrl = `${externalUrl}/protocol/openid-connect/logout?post_logout_redirect_uri=${process.env.NEXTAUTH_URL}`;
-        // 這裡通常透過重定向處理，但 API Route 環境下我們返回一個指示
         console.log("Redirecting to Keycloak logout:", logoutUrl);
       }
     }
@@ -63,9 +62,9 @@ export const authOptions: NextAuthOptions = {
       if (account && user) {
         return {
           accessToken: account.access_token,
-          accessTokenExpires: Date.now() + (account.expires_in! * 1000),
+          accessTokenExpires: Date.now() + (Number(account.expires_in) * 1000),
           refreshToken: account.refresh_token,
-          idToken: account.id_token, // 儲存 ID Token 用於登出
+          idToken: account.id_token,
           user,
         };
       }
@@ -77,6 +76,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
       session.error = token.error as string | undefined;
+      session.user = token.user as any;
       return session;
     },
   },
