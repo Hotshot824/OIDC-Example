@@ -49,6 +49,15 @@ export const authOptions: NextAuthOptions = {
       jwks_endpoint: `${internalUrl}/protocol/openid-connect/certs`,
     }),
   ],
+  events: {
+    async signOut({ token }) {
+      if (token.accessToken) {
+        const logoutUrl = `${externalUrl}/protocol/openid-connect/logout?post_logout_redirect_uri=${process.env.NEXTAUTH_URL}`;
+        // 這裡通常透過重定向處理，但 API Route 環境下我們返回一個指示
+        console.log("Redirecting to Keycloak logout:", logoutUrl);
+      }
+    }
+  },
   callbacks: {
     async jwt({ token, user, account }) {
       if (account && user) {
@@ -56,6 +65,7 @@ export const authOptions: NextAuthOptions = {
           accessToken: account.access_token,
           accessTokenExpires: Date.now() + (account.expires_in! * 1000),
           refreshToken: account.refresh_token,
+          idToken: account.id_token, // 儲存 ID Token 用於登出
           user,
         };
       }
