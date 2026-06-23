@@ -9,24 +9,24 @@ interface ApiExplorerProps {
   session: Session;
 }
 
+import api from "../lib/axios";
+
 export default function ApiExplorer({ session }: ApiExplorerProps) {
   const [apiResponse, setApiResponse] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
 
   const callBackend = async () => {
-    if (!session.accessToken) return;
     setLoading(true);
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/hello", {
+      const res = await api.get("/hello", {
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
         },
       });
-      const data = await res.json() as Record<string, unknown>;
-      setApiResponse(data);
-    } catch (err) {
+      setApiResponse(res.data as Record<string, unknown>);
+    } catch (err: any) {
       console.error(err);
-      setApiResponse({ error: "Failed to call backend" });
+      setApiResponse({ error: err.response?.data?.message || "Failed to call backend" });
     } finally {
       setLoading(false);
     }

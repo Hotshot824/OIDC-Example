@@ -49,7 +49,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <section className="grid grid-cols-1 gap-8">
+            <section className="grid grid-cols-1 gap-2">
               <UserCard session={session} />
               <ApiExplorer session={session} />
               <TokenInspector token={session.accessToken} />

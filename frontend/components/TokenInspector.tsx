@@ -43,12 +43,12 @@ export default function TokenInspector({ token }: TokenInspectorProps) {
 
         {decoded && (
           <div className="space-y-4">
-            <div className="bg-blue-900 rounded p-4 overflow-auto">
-              <h4 className="text-xs font-semibold text-blue-300 mb-2 uppercase">Time Claims (Local Time)</h4>
+            <div className="bg-gray-900 rounded p-4 overflow-auto">
+              <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase">Time Claims (Local Time)</h4>
               <div className="text-[11px] font-mono text-white">
                 {timeFields.map((field) => (
-                  <div key={field} className="flex gap-2 py-1 border-b border-blue-800 last:border-0">
-                    <span className="text-blue-400 w-24">{field}:</span>
+                  <div key={field} className="flex gap-2 py-1 border-blue-800 last:border-0">
+                    <span className="w-24">{field}:</span>
                     <span>{decoded[field] ? formatTime(decoded[field]) : 'N/A'}</span>
                   </div>
                 ))}
@@ -57,7 +57,7 @@ export default function TokenInspector({ token }: TokenInspectorProps) {
 
             <div className="bg-gray-900 rounded p-4 overflow-auto">
               <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase">Decoded Payload</h4>
-              <pre className="text-[11px] font-mono text-indigo-300">
+              <pre className="text-[11px] font-mono">
                 {JSON.stringify(decoded, null, 2)}
               </pre>
             </div>
