@@ -21,6 +21,8 @@ export default function TokenInspector({ token }: TokenInspectorProps) {
     return new Date(seconds * 1000).toLocaleString();
   };
 
+  const timeFields = ['exp', 'iat', 'auth_time'];
+
   return (
     <div className="bg-white shadow rounded-lg border border-gray-100 overflow-hidden">
       <div className="px-4 py-5 sm:px-6 border-b border-gray-100">
@@ -40,19 +42,24 @@ export default function TokenInspector({ token }: TokenInspectorProps) {
         </div>
 
         {decoded && (
-          <div className="bg-gray-900 rounded p-4 overflow-auto">
-            <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase">Decoded Payload</h4>
-            <div className="text-[11px] font-mono text-indigo-300">
-              {Object.entries(decoded).map(([key, value]) => (
-                <div key={key} className="flex gap-2">
-                  <span className="text-gray-500 w-24">{key}:</span>
-                  <span className="break-all">
-                    {['exp', 'iat', 'auth_time'].includes(key) && typeof value === 'number'
-                      ? `${value} (${formatTime(value)})`
-                      : JSON.stringify(value)}
-                  </span>
-                </div>
-              ))}
+          <div className="space-y-4">
+            <div className="bg-blue-900 rounded p-4 overflow-auto">
+              <h4 className="text-xs font-semibold text-blue-300 mb-2 uppercase">Time Claims (Local Time)</h4>
+              <div className="text-[11px] font-mono text-white">
+                {timeFields.map((field) => (
+                  <div key={field} className="flex gap-2 py-1 border-b border-blue-800 last:border-0">
+                    <span className="text-blue-400 w-24">{field}:</span>
+                    <span>{decoded[field] ? formatTime(decoded[field]) : 'N/A'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-gray-900 rounded p-4 overflow-auto">
+              <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase">Decoded Payload</h4>
+              <pre className="text-[11px] font-mono text-indigo-300">
+                {JSON.stringify(decoded, null, 2)}
+              </pre>
             </div>
           </div>
         )}
