@@ -17,6 +17,10 @@ export default function TokenInspector({ token }: TokenInspectorProps) {
 
   const decoded = decodeJWT(token);
 
+  const formatTime = (seconds: number) => {
+    return new Date(seconds * 1000).toLocaleString();
+  };
+
   return (
     <div className="bg-white shadow rounded-lg border border-gray-100 overflow-hidden">
       <div className="px-4 py-5 sm:px-6 border-b border-gray-100">
@@ -38,9 +42,18 @@ export default function TokenInspector({ token }: TokenInspectorProps) {
         {decoded && (
           <div className="bg-gray-900 rounded p-4 overflow-auto">
             <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase">Decoded Payload</h4>
-            <pre className="text-[11px] font-mono text-indigo-300">
-              {JSON.stringify(decoded, null, 2)}
-            </pre>
+            <div className="text-[11px] font-mono text-indigo-300">
+              {Object.entries(decoded).map(([key, value]) => (
+                <div key={key} className="flex gap-2">
+                  <span className="text-gray-500 w-24">{key}:</span>
+                  <span className="break-all">
+                    {['exp', 'iat', 'auth_time'].includes(key) && typeof value === 'number'
+                      ? `${value} (${formatTime(value)})`
+                      : JSON.stringify(value)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
