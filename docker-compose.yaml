@@ -34,6 +34,8 @@ services:
     working_dir: /app
     environment:
       KEYCLOAK_ISSUER: http://localhost:8081/realms/demo
+    env_file:
+      - ./frontend/.env.local
     command: sh ./entrypoint.sh
     ports:
       - "3000:3000"
