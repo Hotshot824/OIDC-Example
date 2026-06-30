@@ -8,28 +8,30 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 當收到 401 且該請求尚未重試過
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    // Only handle 401 errors that haven't been retried yet.
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
 
-      try {
-        // 嘗試從 NextAuth 獲取新的 Session (這會自動觸發 jwt callback 進行刷新)
-        const session = await getSession();
+    originalRequest._retry = true;
 
-        if (session?.accessToken) {
-          // 如果拿到新的 Token，更新請求標頭並重試
-          originalRequest.headers.Authorization = `Bearer ${session.accessToken}`;
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
+    try {
+      const session = await getSession();
+
+      // If the session is missing, or the refresh token attempt failed,
+      // the authentication state is invalid. Trigger sign out.
+      if (!session?.accessToken || session.error === "RefreshAccessTokenError") {
+        throw new Error("Token expired");
       }
 
-      // 如果刷新也失敗，才執行強制登出
+      // Retry the original request with the new access token.
+      originalRequest.headers.Authorization = `Bearer ${session.accessToken}`;
+      return api(originalRequest);
+    } catch (e) {
+      // Force sign out if session recovery fails.
       await signOut({ callbackUrl: '/' });
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
   }
 );
 export default api;
-
